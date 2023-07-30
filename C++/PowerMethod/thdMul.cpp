@@ -11,7 +11,7 @@ struct th2 {
 	long m;
 };
 
-void *Mul(void *threadid) {
+void* Mul(void *threadid) {
 	struct th2 *a = (struct th2 *) threadid;
 	int *i = a->i;
 	int *j = a->j;
@@ -24,6 +24,8 @@ void *Mul(void *threadid) {
                res[i[p]] += x[p]*v[j[p]];
                res[j[p]] += x[p]*v[i[p]];
 	}
+        return NULL;
+
 }
 
 void utmvMul(int *i,int *j,double *x,long m,double *v,int k,double *res, int nth, double **rs) {
