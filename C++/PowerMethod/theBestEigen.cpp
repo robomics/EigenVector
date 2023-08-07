@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <math.h>
-#include <cstdio> // TODO remove me
 
 void norm(double *x,int n) {
 	int i;
@@ -97,7 +96,6 @@ int bestEigen(long m,int *i,int *j,double *x,int *N,double *l1,double *l2,double
 	double er1;
 
 	while (niter < maxiter) {
-                printf("%d\n", niter);
 		for (int junk=0;junk<10;junk++) {
 			fullMul(i,j,x,m,a1,n,a1,good,r,c,d,threads,space);
 			norm(a1,n);

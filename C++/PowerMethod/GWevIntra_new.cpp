@@ -20,6 +20,29 @@ static void usage(const char *argv0)
   fprintf(stderr, "  <resolution>: resolution in bp\n");
 }
 
+static void read_interactions(const hictk::File& f, const hictk::Chromosome& chrom, const std::string& norm, std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& xx) {
+  ii.clear();
+  jj.clear();
+  xx.clear();
+
+  const auto offset = f.bins().at(chrom, 0).id();
+
+  std::visit([&](const auto& sel){
+
+    std::for_each(sel.template begin<double>(), sel.template end<double>(),
+                  [&](const hictk::ThinPixel<double> &p) {
+                    ii.push_back(p.bin1_id - offset);
+                    jj.push_back(p.bin2_id - offset);
+                    if (p.bin1_id == p.bin2_id) {
+                      xx.push_back(p.count * 0.5);
+                    } else {
+                      xx.push_back(p.count);
+                    }
+                  });
+  }, f.fetch(chrom.name(), hictk::balancing::Method{norm}).get());
+
+}
+
 int main(int argc, char *argv[]) {
         string norm("NONE");
         string unit("BP");
@@ -120,26 +143,8 @@ int main(int argc, char *argv[]) {
 		if (chrom_name == "chrY" || chrom_name == "chrM" || chrom_name == "chrMT") continue;
 		if (chrom.is_all()) continue;
 		clock_gettime(CLOCK_REALTIME,&t0);
-                ii.clear();
-                jj.clear();
-                xx.clear();
-                const auto sel = f.fetch(chrom.name(), hictk::balancing::Method{norm});
-                const auto offset = f.bins().at(chrom, 0).id();
-                std::for_each(sel.begin<double>(), sel.end<double>(),
-                    [&](const hictk::ThinPixel<double>&p){
-                                ii.push_back(p.bin1_id - offset);
-                                jj.push_back(p.bin2_id - offset);
-                                if (p.bin1_id == p.bin2_id) {
-                                  xx.push_back(p.count * 0.5);
-                                } else {
-                                  xx.push_back(p.count);
-                                }
 
-                });
-
-                ii.shrink_to_fit();
-                jj.shrink_to_fit();
-                xx.shrink_to_fit();
+                read_interactions(f, chrom, norm, ii, jj, xx);
 
                 if (f.is_hic()) {
                   f.get<hictk::hic::File>().clear_cache();
