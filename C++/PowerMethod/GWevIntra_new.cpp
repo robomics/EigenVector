@@ -123,20 +123,28 @@ int main(int argc, char *argv[]) {
                 ii.clear();
                 jj.clear();
                 xx.clear();
-                const auto bin_ptr = std::make_shared<const hictk::BinTable>(f.bins());
-                const auto sel1 = f.fetch(chrom.name(), hictk::balancing::Method{norm});
-                auto sel2 = hictk::transformers::JoinGenomicCoords(sel1.begin<double>(), sel1.end<double>(), bin_ptr);
-                std::for_each(sel2.begin(), sel2.end(),
-                    [&](const hictk::Pixel<double>&p){
-                                ii.push_back(p.coords.bin1.rel_id());
-                                jj.push_back(p.coords.bin2.rel_id());
-                                if (p.coords.bin1.rel_id() == p.coords.bin2.rel_id()) {
+                const auto sel = f.fetch(chrom.name(), hictk::balancing::Method{norm});
+                const auto offset = f.bins().at(chrom, 0).id();
+                std::for_each(sel.begin<double>(), sel.end<double>(),
+                    [&](const hictk::ThinPixel<double>&p){
+                                ii.push_back(p.bin1_id - offset);
+                                jj.push_back(p.bin2_id - offset);
+                                if (p.bin1_id == p.bin2_id) {
                                   xx.push_back(p.count * 0.5);
                                 } else {
                                   xx.push_back(p.count);
                                 }
 
                 });
+
+                ii.shrink_to_fit();
+                jj.shrink_to_fit();
+                xx.shrink_to_fit();
+
+                if (f.is_hic()) {
+                  f.get<hictk::hic::File>().clear_cache();
+                  f.get<hictk::hic::File>().purge_footer_cache();
+                }
 
                 if (ii.empty()) {
                   continue;
