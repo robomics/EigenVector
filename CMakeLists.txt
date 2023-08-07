@@ -7,6 +7,8 @@ cmake_policy(VERSION 3.25...3.27)
 
 project(POSSUM LANGUAGES C CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
 
 include(FetchContent)
 
